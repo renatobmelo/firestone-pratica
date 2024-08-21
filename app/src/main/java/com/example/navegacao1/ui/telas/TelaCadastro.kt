@@ -20,41 +20,41 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import com.example.navegacao1.model.dados.UsuarioDAO
+import com.example.navegacao1.model.dados.Usuario
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-val usuarioDAO: UsuarioDAO = UsuarioDAO()
-
 @Composable
-fun TelaLogin(modifier: Modifier = Modifier, onSigninClick: () -> Unit, onSignupClick: () -> Unit ) {
+fun TelaCadastro(modifier: Modifier = Modifier, onCadastroClick: () -> Unit) {
     val context = LocalContext.current
     var scope = rememberCoroutineScope()
 
-    var login by remember {mutableStateOf("")}
-    var senha by remember {mutableStateOf("")}
+    var nome by remember { mutableStateOf("") }
+    var senha by remember { mutableStateOf("") }
     var mensagemErro by remember { mutableStateOf<String?>(null) }
+
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier.fillMaxWidth()) {
-        OutlinedTextField(value = login, onValueChange = {login = it}, label = { Text(text = "Login")})
-        Spacer(modifier =  Modifier.height(10.dp))
+        OutlinedTextField(value = nome, onValueChange = { nome = it }, label = { Text(text = "Nome") })
+        Spacer(modifier = Modifier.height(10.dp))
         OutlinedTextField(value = senha, visualTransformation = PasswordVisualTransformation(),
-            onValueChange = {senha = it}, label = { Text(text = "Senha")})
+            onValueChange = { senha = it }, label = { Text(text = "Senha") })
+
         Button(modifier = Modifier.fillMaxWidth(), onClick = {
-            scope.launch(Dispatchers.IO) {
-                usuarioDAO.buscarPorNome(login, callback = { usuario ->
-                    if (usuario != null && usuario.senha == senha) {
-                        onSigninClick()
-                    } else {
-                        mensagemErro = "Login ou senha inválidos!"
+            if (nome.isNotBlank() && senha.isNotBlank()) {
+                scope.launch(Dispatchers.IO) {
+                    val usuario = Usuario(nome = nome, senha = senha)
+                    usuarioDAO.adicionar(usuario) { addedUsuario ->
+                        if (addedUsuario != null) {
+                            onCadastroClick()  // Navega de volta ao login
+                        } else {
+                            mensagemErro = "Erro ao cadastrar usuário!"
+                        }
                     }
-                })
+                }
+            } else {
+                mensagemErro = "Preencha todos os campos!"
             }
         }) {
-            Text("Entrar")
-        }
-
-        Spacer(modifier = Modifier.height(10.dp))
-        Button(modifier = Modifier.fillMaxWidth(), onClick = onSignupClick) {
             Text("Cadastrar")
         }
 
@@ -65,5 +65,4 @@ fun TelaLogin(modifier: Modifier = Modifier, onSigninClick: () -> Unit, onSignup
             }
         }
     }
-
 }

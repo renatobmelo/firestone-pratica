@@ -40,8 +40,16 @@ class UsuarioDAO {
     }
 
 
-    fun adicionar(usuario: Usuario, callback: (Usuario) -> Unit) {
-        //TODO implemente adicionar
+    fun adicionar(usuario: Usuario, callback: (Usuario?) -> Unit) {
+        db.collection("usuarios").add(usuario)
+            .addOnSuccessListener { documentReference ->
+                val addedUsuario = usuario.copy(id = documentReference.id)
+                callback(addedUsuario)
+            }
+            .addOnFailureListener {
+                callback(null)
+            }
     }
+
 
 }
